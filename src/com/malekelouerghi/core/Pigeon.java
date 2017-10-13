@@ -1,4 +1,4 @@
-package com.malek.elouerghi;
+package com.malekelouerghi.core;
 
 public class Pigeon {
     private int x;
