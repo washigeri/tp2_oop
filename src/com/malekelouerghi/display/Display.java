@@ -1,8 +1,6 @@
 package com.malekelouerghi.display;
 
-import com.malekelouerghi.core.Food;
-import com.malekelouerghi.core.Pigeon;
-import com.malekelouerghi.core.Walker;
+import com.malekelouerghi.core.*;
 import sdljava.SDLException;
 import sdljava.SDLMain;
 import sdljava.event.SDLEvent;
@@ -20,14 +18,15 @@ public class Display {
     private SDLSurface pigeonTile;
     private SDLSurface foodTile;
     private SDLSurface walkerTile;
+    private SDLSurface oldFoodTile;
     private int tilesizew;
     private int tilesizeh;
 
-    public Display() {
+    Display() {
         this.init(512, 288);
     }
 
-    public Display(int width, int height) {
+    Display(int width, int height) {
         width = max(64, width);
         height = max(64, height);
         this.tilesizeh = height / 64;
@@ -46,22 +45,29 @@ public class Display {
             this.setPigeonTile(SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, tilesizew, tilesizeh, 32, 0, 0, 0, 0));
             this.getPigeonTile().fillRect(this.getScreen().mapRGB(255, 0, 0));
             this.setFoodTile(SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, tilesizew, tilesizeh, 32, 0, 0, 0, 0));
-            this.getFoodTile().fillRect(this.getScreen().mapRGB(0, 0, 255));
+            this.getFoodTile().fillRect(this.getScreen().mapRGB(255, 255, 0));
             this.setWalkerTile(SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, tilesizew, tilesizeh, 32, 0, 0, 0, 0));
             this.getWalkerTile().fillRect(this.getScreen().mapRGB(255, 255, 255));
+            this.setOldFoodTile(SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, tilesizew, tilesizeh, 32, 0, 0, 0, 0));
+            this.getOldFoodTile().fillRect(this.getScreen().mapRGB(0, 0, 255));
         } catch (SDLException e) {
             System.out.print(e.getMessage());
             System.exit(-1);
         }
     }
 
-    public void drawingLoop(Object[][] board) {
+    void drawingLoop(BoardGame board) {
 
         boolean loop = true;
         SDLEvent event;
-        while (loop) {
-            try {
-                event = SDLEvent.waitEvent();
+        long startTime;
+        long endTime;
+        int framerate = 10;
+        float frametime = (1f / framerate) * 1000;
+        startTime = System.currentTimeMillis() / 1000;
+        while (loop) try {
+            event = SDLEvent.pollEvent();
+            if (event != null) {
                 switch (event.getType()) {
                     case SDLEvent.SDL_QUIT:
                         loop = false;
@@ -75,31 +81,32 @@ public class Display {
                     case SDLEvent.SDL_MOUSEBUTTONUP:
                         SDLMouseButtonEvent eventMouse = (SDLMouseButtonEvent) event;
                         if (eventMouse.getButton() == SDLEvent.SDL_BUTTON_LEFT || eventMouse.getButton() == SDLEvent.SDL_BUTTON_RIGHT) {
-                            //TODO : ADD ACTION WHEN AREA IS CLICKED;
+                            int x = this.mapScreentoBoard(eventMouse.getX(), 'w');
+                            int y = this.mapScreentoBoard(eventMouse.getY(), 'h');
+                            board.addObject(new Food(x, y, 30));
 
                         }
                         break;
                 }
-                getScreen().fillRect(getScreen().mapRGB(0, 0, 0));
-                this.drawBoard(board);
-                this.getScreen().flip();
-
-
-            } catch (SDLException e) {
-                e.printStackTrace();
-                loop = false;
-                try {
-                    this.finalize();
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                }
             }
+            getScreen().fillRect(getScreen().mapRGB(0, 0, 0));
+            this.drawBoard(board);
+            this.getScreen().flip();
+            endTime = System.currentTimeMillis();
+            Thread.sleep(Math.max((long) (frametime - (endTime - startTime)), 0));
 
+        } catch (SDLException e) {
+            e.printStackTrace();
+            loop = false;
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    private void drawBoard(Object[][] board) {
+    private void drawBoard(final BoardGame boardgame) {
         SDLRect pos = new SDLRect();
+        final BoardObject[][] board = boardgame.getBoard();
         int width = board.length;
         int height = board[0].length;
         for (int i = 0; i < width; i++) {
@@ -115,7 +122,10 @@ public class Display {
                         }
                     } else if (board[i][j] instanceof Food) {
                         try {
-                            this.getFoodTile().blitSurface(this.getScreen(), pos);
+                            if (!((Food) board[i][j]).isOld())
+                                this.getFoodTile().blitSurface(this.getScreen(), pos);
+                            else
+                                this.getOldFoodTile().blitSurface(this.getScreen(), pos);
                         } catch (SDLException e) {
                             e.printStackTrace();
                         }
@@ -141,7 +151,7 @@ public class Display {
         return res;
     }
 
-    int mapBoardtoScreen(int pos, char mode) {
+    private int mapBoardtoScreen(int pos, char mode) {
         int res = 0;
         if (mode == 'w') {
             res = (this.getScreen().getWidth()) * (pos) / (64);
@@ -151,35 +161,35 @@ public class Display {
         return res;
     }
 
-    public SDLSurface getScreen() {
+    private SDLSurface getScreen() {
         return screen;
     }
 
-    public void setScreen(SDLSurface screen) {
+    private void setScreen(SDLSurface screen) {
         this.screen = screen;
     }
 
-    public SDLSurface getPigeonTile() {
+    private SDLSurface getPigeonTile() {
         return pigeonTile;
     }
 
-    public void setPigeonTile(SDLSurface pigeonTile) {
+    private void setPigeonTile(SDLSurface pigeonTile) {
         this.pigeonTile = pigeonTile;
     }
 
-    public SDLSurface getFoodTile() {
+    private SDLSurface getFoodTile() {
         return foodTile;
     }
 
-    public void setFoodTile(SDLSurface foodTile) {
+    private void setFoodTile(SDLSurface foodTile) {
         this.foodTile = foodTile;
     }
 
-    public SDLSurface getWalkerTile() {
+    private SDLSurface getWalkerTile() {
         return walkerTile;
     }
 
-    public void setWalkerTile(SDLSurface walkerTile) {
+    private void setWalkerTile(SDLSurface walkerTile) {
         this.walkerTile = walkerTile;
     }
 
@@ -193,4 +203,11 @@ public class Display {
     }
 
 
+    private SDLSurface getOldFoodTile() {
+        return oldFoodTile;
+    }
+
+    private void setOldFoodTile(SDLSurface oldFoodTile) {
+        this.oldFoodTile = oldFoodTile;
+    }
 }

@@ -1,16 +1,26 @@
 package com.malekelouerghi.display;
 
 import com.malekelouerghi.core.BoardGame;
-import com.malekelouerghi.core.Pigeon;
-import sdljava.SDLException;
+import com.malekelouerghi.thread.BoardThread;
+import com.malekelouerghi.thread.PigeonThread;
 
 public class Main {
 
+
     public static void main(String[] args) {
-        Display kek = new Display(1024, 576);
-        Pigeon pig = new Pigeon(5, 5);
+        int numPigeons = 10;
+        Display display = new Display(1024, 576);
         BoardGame board = new BoardGame();
-        board.addObject(pig, pig.getX(), pig.getY());
-        kek.drawingLoop(board.getBoard());
+        Thread t1 = new Thread(new BoardThread(board), "Board Thread");
+        t1.start();
+        ThreadGroup tg = new ThreadGroup("Pigeon Thread Group");
+        for(int i = 0; i< numPigeons; i++){
+            Thread t = new Thread(tg, new PigeonThread(board), "Pigeon Thread #" + (i+1));
+            t.start();
+        }
+
+        display.drawingLoop(board);
+        t1.interrupt();
+        tg.interrupt();
     }
 }

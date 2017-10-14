@@ -9,13 +9,16 @@ class BoardGameTest {
     void addObject() {
         BoardGame board = new BoardGame();
         Pigeon pig = new Pigeon();
-        board.addObject(pig, (short)0,(short)0);
+        board.addObject(pig);
         assertEquals( board.getBoard()[0][0],pig);
         Pigeon tmp = (Pigeon) board.getBoard()[0][0];
-        assertEquals(tmp.getX(), 0);
-        pig.setX(15);
-        assertEquals(tmp.getX(), 15);
+        assertEquals(tmp.getxPos(), 0);
+        pig.setxPos(15);
+        assertEquals(tmp.getxPos(), 15);
         assertEquals(board.getBoard()[1][0], null);
+        Pigeon pig2 = new Pigeon(200,400);
+        board.addObject(pig2);
+        assertEquals(board.getBoard()[63][63], pig2);
 
     }
 

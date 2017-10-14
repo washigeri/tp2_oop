@@ -1,38 +1,22 @@
 package com.malekelouerghi.core;
 
-public class Food {
-    private int xPos;
-    private int yPos;
+public class Food extends BoardObject {
     private int ttl;
     private boolean old;
+    private boolean eaten;
 
     public Food() {
-        this.setxPos(0);
-        this.setyPos(0);
+        super();
         this.setTtl(10);
         this.setOld(false);
+        this.setEaten(false);
     }
 
     public Food(int x, int y, int ttl) {
-        this.setxPos(x);
-        this.setyPos(y);
+        super(x,y);
         this.setTtl(ttl);
-    }
-
-    public int getxPos() {
-        return xPos;
-    }
-
-    public void setxPos(int xPos) {
-        this.xPos = xPos;
-    }
-
-    public int getyPos() {
-        return yPos;
-    }
-
-    public void setyPos(int yPos) {
-        this.yPos = yPos;
+        this.setEaten(false);
+        this.setOld(false);
     }
 
     public int getTtl() {
@@ -49,5 +33,13 @@ public class Food {
 
     public void setOld(boolean old) {
         this.old = old;
+    }
+
+    public boolean isEaten() {
+        return eaten;
+    }
+
+    public void setEaten(boolean eaten) {
+        this.eaten = eaten;
     }
 }

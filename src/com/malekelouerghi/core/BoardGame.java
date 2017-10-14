@@ -3,24 +3,28 @@ package com.malekelouerghi.core;
 import static java.lang.Math.max;
 
 public class BoardGame {
-    private Object[][] board;
+    private BoardObject[][] board;
     private int objectsCount;
 
 
     public BoardGame() {
-        this.setBoard(new Object[64][64]);
+        this.setBoard(new BoardObject[64][64]);
         this.setObjectsCount(0);
     }
 
 
-    public boolean addObject(Object obj, int i, int j) {
-        int MAXOBJECTS = 10;
+    public boolean addObject(BoardObject obj) {
+
+        int i = obj.getxPos(), j = obj.getyPos();
+        int MAXOBJECTS = 20;
         if (this.getObjectsCount() < MAXOBJECTS) {
             if (i > 63) {
                 i = 63;
+                obj.setxPos(i);
             }
             if (j > 63) {
                 j = 63;
+                obj.setyPos(j);
             }
             if (this.getBoard()[i][j] == null) {
                 this.getBoard()[i][j] = obj;
@@ -33,7 +37,7 @@ public class BoardGame {
     }
 
     public boolean removeObject(int i, int j) throws ArrayIndexOutOfBoundsException {
-        if (i> 63|| j > 63)
+        if (i > 63 || j > 63)
             throw new ArrayIndexOutOfBoundsException("Parameters must be in range of array");
         else {
             this.getBoard()[i][j] = null;
@@ -43,15 +47,15 @@ public class BoardGame {
 
     }
 
-    public Object[][] getBoard() {
+    public BoardObject[][] getBoard() {
         return board;
     }
 
-    private void setBoard(Object[][] board) {
+    private void setBoard(BoardObject[][] board) {
         this.board = board;
     }
 
-    public int getObjectsCount() {
+    private int getObjectsCount() {
         return objectsCount;
     }
 
