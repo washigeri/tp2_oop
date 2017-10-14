@@ -5,11 +5,13 @@ import static java.lang.Math.max;
 public class BoardGame {
     private BoardObject[][] board;
     private int objectsCount;
+    private boolean isWalkerPresent;
 
 
     public BoardGame() {
         this.setBoard(new BoardObject[64][64]);
         this.setObjectsCount(0);
+        this.setWalkerPresent(false);
     }
 
 
@@ -61,5 +63,13 @@ public class BoardGame {
 
     private void setObjectsCount(int objectsCount) {
         this.objectsCount = objectsCount;
+    }
+
+    public boolean isWalkerPresent() {
+        return isWalkerPresent;
+    }
+
+    public void setWalkerPresent(boolean walkerPresent) {
+        isWalkerPresent = walkerPresent;
     }
 }

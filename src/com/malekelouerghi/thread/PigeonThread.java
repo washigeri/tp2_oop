@@ -3,11 +3,14 @@ package com.malekelouerghi.thread;
 import com.malekelouerghi.core.BoardGame;
 import com.malekelouerghi.core.Food;
 import com.malekelouerghi.core.Pigeon;
+import com.malekelouerghi.core.Walker;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 public class PigeonThread implements Runnable {
 
@@ -39,14 +42,24 @@ public class PigeonThread implements Runnable {
         while (doloop) {
             startTime = System.currentTimeMillis();
             this.getTargetPigeon().setTargetFood(this.findClosest());
-            if (this.getTargetPigeon().getTargetFood() != null) {
-                synchronized (this) {
-                    Integer[] nextMovemnt = this.nextStep(this.getTargetPigeon().getTargetFood());
-                    if (board.getBoard()[nextMovemnt[0]][nextMovemnt[1]] == null) {
-                        this.movePigeon(nextMovemnt);
-                    } else if (board.getBoard()[nextMovemnt[0]][nextMovemnt[1]] instanceof Food) {
-                        this.eatFood(nextMovemnt);
+            synchronized (this) {
+                if (!this.getBoard().isWalkerPresent()) {
+                    if (this.getTargetPigeon().getTargetFood() != null) {
+
+                        Integer[] nextMovemnt = this.nextStep(this.getTargetPigeon().getTargetFood());
+                        if (board.getBoard()[nextMovemnt[0]][nextMovemnt[1]] == null) {
+                            this.movePigeon(nextMovemnt);
+                        } else if (board.getBoard()[nextMovemnt[0]][nextMovemnt[1]] instanceof Food) {
+                            this.eatFood(nextMovemnt);
+                        }
                     }
+
+                } else {
+                    Integer[] nextMovement = this.flyFromWalker();
+                    if (nextMovement != null && board.getBoard()[nextMovement[0]][nextMovement[1]] == null) {
+                        this.movePigeon(nextMovement);
+                    }
+
                 }
             }
             endTime = System.currentTimeMillis();
@@ -84,6 +97,7 @@ public class PigeonThread implements Runnable {
 
 
     private Integer[] nextStep(Food target) {
+
         int currentx = this.getTargetPigeon().getxPos();
         int currenty = this.getTargetPigeon().getyPos();
         float distance;
@@ -92,8 +106,8 @@ public class PigeonThread implements Runnable {
             for (int j = -1; j < 2; j++) {
                 if (i == 0 && j == 0)
                     distance = Float.MAX_VALUE;
-                else if (currentx + i > 0 && currentx + i < board.getBoard().length &&
-                        currenty + j > 0 && currenty + j < board.getBoard()[0].length
+                else if (currentx + i >= 0 && currentx + i < board.getBoard().length &&
+                        currenty + j >= 0 && currenty + j < board.getBoard()[0].length
                         && (board.getBoard()[currentx + i][currenty + j] == null
                         || board.getBoard()[currentx + i][currenty + j] instanceof Food)) {
                     distance = (float) Math.sqrt(Math.pow(target.getxPos() - (currentx + i), 2) +
@@ -105,6 +119,51 @@ public class PigeonThread implements Runnable {
             }
         }
         return neighborsDistance.get(Collections.min(neighborsDistance.keySet()));
+
+    }
+
+    private Integer[] flyFromWalker() {
+        int walkposx = 0, walkposy = 0, fearRadius = 0;
+        loopdone:
+        for (int i = 0; i < this.getBoard().getBoard().length; i++) {
+            for (int j = 0; j < this.getBoard().getBoard()[0].length; j++) {
+                if (this.getBoard().getBoard()[i][j] instanceof Walker) {
+                    Walker walk = (Walker) this.getBoard().getBoard()[i][j];
+                    walkposx = walk.getxPos();
+                    walkposy = walk.getyPos();
+                    fearRadius = walk.getFearRadius();
+                    break loopdone;
+                }
+            }
+        }
+        float distanceToWalker = (float) Math.sqrt(Math.pow((walkposx - this.getTargetPigeon().getxPos()), 2) +
+                Math.pow((walkposy - this.getTargetPigeon().getyPos()), 2));
+        if (distanceToWalker <= fearRadius) {
+            int currentx = this.getTargetPigeon().getxPos(), currenty = this.getTargetPigeon().getyPos();
+            float distance;
+            ArrayList<AbstractMap.SimpleEntry<Float, Integer[]>> results = new ArrayList<>(3);
+            for (int i = -1; i < 3; i++) {
+                for (int j = -1; j < 3; j++) {
+                    if (i == 0 && j == 0) {
+                        distance = Float.MIN_VALUE / 2.f;
+                    } else if (currentx + i >= 0 && currentx + i < board.getBoard().length &&
+                            currenty + j >= 0 && currenty + j < board.getBoard()[0].length
+                            && board.getBoard()[currentx + i][currenty + j] == null) {
+                        distance = (float) Math.sqrt(Math.pow(walkposx - (currentx + i), 2) +
+                                Math.pow(walkposy - (currenty + j), 2));
+                    } else {
+                        distance = Float.MIN_VALUE;
+                    }
+                    results.add(new AbstractMap.SimpleEntry<>(distance, new Integer[]{currentx + i, currenty + j}));
+                }
+            }
+            Predicate<AbstractMap.SimpleEntry<Float, Integer[]>> predicate = p -> p.getKey() <= Float.MIN_VALUE;
+            results.removeIf(predicate);
+            return results.get(ThreadLocalRandom.current().nextInt(results.size())).getValue();
+        } else {
+            return null;
+
+        }
     }
 
     private Food findClosest() {
