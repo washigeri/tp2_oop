@@ -2,6 +2,7 @@ package com.malekelouerghi.display;
 
 import com.malekelouerghi.core.BoardGame;
 import com.malekelouerghi.thread.BoardThread;
+import com.malekelouerghi.thread.FoodThread;
 import com.malekelouerghi.thread.PigeonThread;
 
 public class Main {
@@ -13,6 +14,8 @@ public class Main {
         BoardGame board = new BoardGame();
         Thread t1 = new Thread(new BoardThread(board), "Board Thread");
         t1.start();
+        Thread t2 = new Thread(new FoodThread(board), "Food Thread");
+        t2.start();
         ThreadGroup tg = new ThreadGroup("Pigeon Thread Group");
         for(int i = 0; i< numPigeons; i++){
             Thread t = new Thread(tg, new PigeonThread(board), "Pigeon Thread #" + (i+1));
@@ -21,6 +24,7 @@ public class Main {
 
         display.drawingLoop(board);
         t1.interrupt();
+        t2.interrupt();
         tg.interrupt();
     }
 }

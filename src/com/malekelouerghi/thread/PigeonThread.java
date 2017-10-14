@@ -73,8 +73,10 @@ public class PigeonThread implements Runnable {
 
     private void eatFood(Integer[] movementCoordinates) {
         try {
-            this.targetPigeon.getTargetFood().setEaten(true);
-            board.removeObject(movementCoordinates[0], movementCoordinates[1]);
+            if (!((Food) board.getBoard()[movementCoordinates[0]][movementCoordinates[1]]).isOld()) {
+                this.targetPigeon.getTargetFood().setEaten(true);
+                board.removeObject(movementCoordinates[0], movementCoordinates[1]);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

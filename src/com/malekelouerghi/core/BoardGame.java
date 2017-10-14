@@ -55,7 +55,7 @@ public class BoardGame {
         this.board = board;
     }
 
-    private int getObjectsCount() {
+    public int getObjectsCount() {
         return objectsCount;
     }
 
