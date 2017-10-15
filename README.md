@@ -1,5 +1,5 @@
 # Pigeon Square Java - SDL
-### El Ouerghi Malek - ELOM08089606
+### El Ouerghi Malek
 
 ## Pré-requis :
 * Windows
